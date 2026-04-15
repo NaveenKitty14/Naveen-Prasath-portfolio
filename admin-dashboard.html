@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Artinex</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #020617; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .login-card { background: #171717; border-radius: 20px; padding: 2rem; border: 1px solid #3700ff; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row">
+
+    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/98 backdrop-blur-xl p-4">
+        <div class="login-card w-full max-w-[350px] text-center">
+            <h2 class="text-xl font-bold mb-6">Security Portal</h2>
+            <input type="text" id="userIn" placeholder="Username" class="w-full bg-black border border-slate-700 rounded-xl px-4 py-3 mb-3 outline-none focus:border-emerald-500">
+            <input type="password" id="passIn" placeholder="Password" class="w-full bg-black border border-slate-700 rounded-xl px-4 py-3 mb-6 outline-none focus:border-emerald-500">
+            <button onclick="checkAuth()" class="w-full bg-emerald-500 text-black font-bold py-3 rounded-xl hover:bg-white transition-all">Verify Access</button>
+            <p id="errorMsg" class="hidden text-red-500 text-xs mt-4">Invalid Credentials</p>
+        </div>
+    </div>
+
+    <aside class="w-full md:w-64 glass md:h-screen sticky top-0 flex flex-row md:flex-col p-6 items-center md:items-start border-b md:border-r border-slate-800">
+        <h2 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent mb-0 md:mb-10">Admin Panel</h2>
+        <button onclick="logout()" class="ml-auto md:ml-0 text-slate-500 hover:text-red-400 text-sm font-bold">Sign Out</button>
+    </aside>
+
+    <main class="flex-grow p-6 md:p-12 max-w-7xl mx-auto w-full">
+        <header class="mb-10">
+            <h1 class="text-3xl font-bold">Manage Projects</h1>
+            <p class="text-slate-400">Add or remove items from your live portfolio.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <section class="glass p-8 rounded-3xl">
+                <form id="projectForm" class="space-y-4">
+                    <input type="text" id="pTitle" placeholder="Project Title" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-indigo-500" required>
+                    <div class="grid grid-cols-2 gap-4">
+                        <select id="pCat" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+                            <option value="web">Web App</option>
+                            <option value="graphic Design">Design</option>
+                            <option value="works">Works</option>
+                            <option value="video">Video</option>
+                        </select>
+                        <input type="text" id="pTech" placeholder="Tech (React, AI, CSS)" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3" required>
+                    </div>
+                    <input type="text" id="pLink" placeholder="Case Study URL (http://...)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3" required>
+                    <input type="file" id="pImgFile" class="text-xs text-slate-500 block w-full" accept="image/*">
+                    <textarea id="pDesc" placeholder="Brief Description" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3" required></textarea>
+                    <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition-all">Sync to Portfolio</button>
+                </form>
+            </section>
+
+            <section class="glass p-8 rounded-3xl">
+                <h2 class="text-lg font-bold mb-6">Inventory Items</h2>
+                <div id="adminProjectList" class="space-y-4"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // --- Auth Logic ---
+        function checkAuth() {
+            const u = document.getElementById('userIn').value;
+            const p = document.getElementById('passIn').value;
+            if(u === "NaveenKitty" && p === "Naveen@1425") {
+                sessionStorage.setItem('isAdmin', 'true');
+                document.getElementById('loginOverlay').classList.add('hidden');
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
+            }
+        }
+        if(sessionStorage.getItem('isAdmin') === 'true') document.getElementById('loginOverlay').classList.add('hidden');
+        function logout() { sessionStorage.removeItem('isAdmin'); location.reload(); }
+
+        // --- Data Handling ---
+        let base64Image = "";
+        document.getElementById('pImgFile').onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => base64Image = event.target.result;
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        function loadInventory() {
+            const projects = JSON.parse(localStorage.getItem('artinex_projects')) || [];
+            document.getElementById('adminProjectList').innerHTML = projects.map(p => `
+                <div class="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <div class="flex items-center gap-4">
+                        <img src="${p.img}" class="w-12 h-12 rounded-lg object-cover">
+                        <div>
+                            <p class="font-bold text-sm">${p.title}</p>
+                            <p class="text-[10px] text-indigo-400 uppercase font-bold">${p.category}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteItem(${p.id})" class="text-red-500 hover:text-white text-xs font-bold p-2">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('projectForm').onsubmit = (e) => {
+            e.preventDefault();
+            const newProj = {
+                id: Date.now(),
+                title: document.getElementById('pTitle').value,
+                category: document.getElementById('pCat').value,
+                // Convert comma string to array for Projects page compatibility
+                tech: document.getElementById('pTech').value.split(',').map(item => item.trim()),
+                link: document.getElementById('pLink').value,
+                img: base64Image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600',
+                desc: document.getElementById('pDesc').value
+            };
+
+            const saved = JSON.parse(localStorage.getItem('artinex_projects')) || [];
+            saved.unshift(newProj);
+            localStorage.setItem('artinex_projects', JSON.stringify(saved));
+            
+            e.target.reset();
+            base64Image = "";
+            loadInventory();
+            alert("Project Live!");
+        };
+
+        window.deleteItem = (id) => {
+            let saved = JSON.parse(localStorage.getItem('artinex_projects')) || [];
+            saved = saved.filter(p => p.id !== id);
+            localStorage.setItem('artinex_projects', JSON.stringify(saved));
+            loadInventory();
+        };
+
+        loadInventory();
+    </script>
+</body>
+</html>

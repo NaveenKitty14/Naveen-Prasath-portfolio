@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NaveenKitty | Projects</title>
+    <link rel="icon" href="./assets/Icon.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #6366f1;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: radial-gradient(circle at top left, #0f172a, #020617);
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Blob */
+        .blob {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: -1;
+            border-radius: 50%;
+            animation: move 20s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(20%, 20%); }
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .glass-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .tech-pill {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+        }
+        .search-bar:focus { border-color: var(--accent); outline: none; }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <div class="blob"></div>
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 md:mb-12 text-center md:text-left">
+            <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-500">
+                Crafted Projects
+            </h1>
+            <p class="text-slate-400 text-base md:text-lg max-w-2xl">
+                A collection of experiments in AI, Brand Strategies, and Full-stack engineering.
+            </p>
+        </header>
+
+        <div class="flex flex-col gap-6 mb-12">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="flex gap-2 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 overflow-x-auto w-full md:w-auto hide-scrollbar">
+                    <button data-filter="all" class="filter-btn active px-5 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all">All</button>
+                    <button data-filter="web" class="filter-btn px-5 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all hover:bg-slate-800">Web App</button>
+                    <button data-filter="graphic Design" class="filter-btn px-5 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all hover:bg-slate-800 text-slate-400">Design</button>
+                    <button data-filter="works" class="filter-btn px-5 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all hover:bg-slate-800 text-slate-400">Works</button>
+                    <button data-filter="video" class="filter-btn px-5 py-2 rounded-xl text-xs md:text-sm font-semibold whitespace-nowrap transition-all hover:bg-slate-800 text-slate-400">Video</button>
+                </div>
+
+                <input type="text" id="searchInput" placeholder="Search tech or name..." 
+                    class="search-bar px-6 py-3 rounded-2xl text-slate-200 w-full md:w-72 text-sm">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" id="projectGrid">
+            </div>
+
+        <div id="loadMoreContainer" class="mt-16 text-center">
+            <button id="loadMoreBtn" class="px-8 py-3 rounded-full border border-slate-700 hover:border-indigo-500 hover:text-indigo-400 transition-all font-bold text-sm">
+                Explore More Projects
+            </button>
+        </div>
+    </div>
+
+    <div class="mt-20 text-center pb-12">
+        <a href="admin-dashboard.html" class="text-[10px] uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors">Admin Access</a>
+    </div>
+
+    <script>
+        const PROJECTS_PER_PAGE = 3;
+        let visibleCount = PROJECTS_PER_PAGE;
+
+        // Your original hardcoded projects
+        const defaultProjects = [
+            { title: "Hii medias", desc: "Video editor on the company.", category: "video", tech: ["premire pro", "capcut"], img: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=600", link: "https://drive.google.com/drive/folders/11jRBIc858MAV_oqkKuuZfllb3zMQeCLS?usp=drive_link" },
+            { title: "Portfolio", desc: "A modern, responsive portfolio website showcasing my work.", category: "web", tech: ["Html", "CSS", "JS"], img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600", link: "" },
+            { title: "Artinex.in", desc: "Strategic visual branding and logo systems for modern startups.", category: "graphic Design", tech: ["Illustrator", "photoshop", "canva"], img: "./assets/front.png", link: "http://artinex.in" },
+            { title: "NIDS System", desc: "Next-gen Network Intrusion Detection using Attention-based Transformers.", category: "web", tech: ["Transformers", "Security"], img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=600", link: "https://github.com/NaveenKitty14/NIDS-using-Transformer" }
+        ];
+
+        const grid = document.getElementById("projectGrid");
+        const searchInput = document.getElementById("searchInput");
+        const filterBtns = document.querySelectorAll(".filter-btn");
+        const loadMoreBtn = document.getElementById("loadMoreBtn");
+
+        function renderProjects(data) {
+            const displayData = data.slice(0, visibleCount);
+            
+            if (displayData.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 italic text-sm">No projects found.</div>`;
+                document.getElementById("loadMoreContainer").style.display = "none";
+                return;
+            }
+
+            grid.innerHTML = displayData.map(p => `
+                <div class="glass-card flex flex-col h-full rounded-3xl overflow-hidden group">
+                    <div class="h-48 bg-slate-800 relative overflow-hidden">
+                        <img src="${p.img}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="${p.title}">
+                        <span class="absolute top-4 right-4 text-[10px] uppercase font-bold tracking-widest bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                            ${p.category}
+                        </span>
+                    </div>
+                    <div class="p-6 md:p-8 flex flex-col flex-grow">
+                        <h3 class="text-xl font-bold mb-3 group-hover:text-indigo-400 transition-colors">${p.title}</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6 flex-grow">${p.desc}</p>
+                        <div class="flex flex-wrap gap-2 mb-8">
+                            ${Array.isArray(p.tech) ? p.tech.map(t => `<span class="tech-pill px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">${t}</span>`).join('') : ''}
+                        </div>
+                        <div class="flex justify-between items-center mt-auto border-t border-slate-800 pt-6">
+                            <a href="${p.link}" target="_blank" class="text-sm font-bold text-indigo-400 hover:text-white transition-colors">View Project →</a>
+                            <button class="text-slate-500 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById("loadMoreContainer").style.display = (visibleCount >= data.length) ? "none" : "block";
+        }
+
+        function getFilteredData() {
+            const searchTerm = (searchInput.value || "").toLowerCase();
+            const activeFilter = document.querySelector(".filter-btn.active").dataset.filter;
+            
+            // COMBINE DEFAULT AND CUSTOM PROJECTS
+            const customProjects = JSON.parse(localStorage.getItem('artinex_projects')) || [];
+            const allProjects = [...customProjects, ...defaultProjects];
+
+            return allProjects.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(searchTerm) || 
+                                    p.tech.some(t => t.toLowerCase().includes(searchTerm));
+                const matchesFilter = activeFilter === "all" || p.category === activeFilter;
+                return matchesSearch && matchesFilter;
+            });
+        }
+
+        function updateDisplay(resetCount = true) {
+            if (resetCount) visibleCount = PROJECTS_PER_PAGE;
+            renderProjects(getFilteredData());
+        }
+
+        // Event Listeners
+        filterBtns.forEach(btn => {
+            btn.onclick = () => {
+                filterBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                updateDisplay();
+            }
+        });
+
+        loadMoreBtn.onclick = () => {
+            visibleCount += PROJECTS_PER_PAGE;
+            updateDisplay(false);
+        };
+
+        searchInput.oninput = () => updateDisplay();
+
+        // Initial Load
+        updateDisplay();
+    </script>
+</body>
+</html>
